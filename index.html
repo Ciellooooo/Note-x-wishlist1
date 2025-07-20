@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Note Tracker - Wishlist & Tabungan</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #121212; color: #fff; padding: 20px; }
+    header { display: flex; justify-content: space-between; align-items: center; }
+    nav a { color: #fff; margin: 0 10px; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    .container { background: #1e1e1e; padding: 20px; border-radius: 10px; max-width: 700px; margin: auto; }
+    input, select, button { padding: 10px; margin: 5px 0; width: 100%; background: #333; color: #fff; border: none; border-radius: 5px; }
+    button { background: #6200ea; cursor: pointer; }
+    button:hover { background: #3700b3; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #333; padding: 8px; text-align: center; }
+    th { background: #6200ea; }
+    tr:nth-child(even) { background-color: #2c2c2c; }
+    .summary { margin-top: 20px; background: #2c2c2c; padding: 10px; border-radius: 5px; }
+    .section { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Note Tracker & WishList</h1>
+    <nav>
+      <a href="index.html">Wishlist</a>
+      <a href="page2.html">Note</a>
+    </nav>
+  </header>
+
+  <div class="container">
+
+    <div class="section">
+      <h3>Tambah Barang Wishlist</h3>
+      <input type="text" id="itemName" placeholder="Nama Barang">
+      <input type="number" id="itemPrice" placeholder="Harga Barang">
+      <button onclick="addItem()">Tambah Barang</button>
+    </div>
+
+    <div class="section">
+      <h3>Tambah Tabungan</h3>
+      <input type="number" id="savingsAmount" placeholder="Nominal Tabungan">
+      <button onclick="addSavings()">Tambah Tabungan</button>
+    </div>
+
+    <div class="section">
+      <h3>Opsi Cicilan</h3>
+      <select id="installmentOption">
+        <option value="3">3x per bulan</option>
+        <option value="8">8x per bulan</option>
+        <option value="12">12x per bulan</option>
+      </select>
+    </div>
+
+    <table id="itemTable">
+      <thead>
+        <tr>
+          <th>Nama Barang</th>
+          <th>Harga</th>
+          <th>Cicilan per Bulan</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="summary">
+      <p>Total Harga Barang: <span id="totalPrice">Rp 0</span></p>
+      <p>Total Tabungan: <span id="totalSavings">Rp 0</span></p>
+      <p>Sisa Kekurangan: <span id="remaining">Rp 0</span></p>
+      <p>Total: <span id="totalSummary">Rp 0</span></p>
+    </div>
+
+  </div>
+
+  <script>
+    let items = JSON.parse(localStorage.getItem('items')) || [];
+    let totalSavings = parseInt(localStorage.getItem('totalSavings')) || 0;
+
+    function saveData() {
+      localStorage.setItem('items', JSON.stringify(items));
+      localStorage.setItem('totalSavings', totalSavings);
+    }
+
+    function addItem() {
+      const name = document.getElementById('itemName').value;
+      const price = parseInt(document.getElementById('itemPrice').value);
+      const installmentOption = parseInt(document.getElementById('installmentOption').value);
+
+      if (name && price && installmentOption) {
+        items.push({ name, price, installmentOption });
+        document.getElementById('itemName').value = '';
+        document.getElementById('itemPrice').value = '';
+        updateTable();
+        saveData();
+      }
+    }
+
+    function addSavings() {
+      const amount = parseInt(document.getElementById('savingsAmount').value);
+      if (amount) {
+        totalSavings += amount;
+        document.getElementById('savingsAmount').value = '';
+        updateSummary();
+        saveData();
+      }
+    }
+
+    function updateTable() {
+      const tbody = document.querySelector('#itemTable tbody');
+      tbody.innerHTML = '';
+      let totalPrice = 0;
+
+      items.forEach(item => {
+        totalPrice += item.price;
+        const installmentValue = Math.ceil(item.price / item.installmentOption);
+
+        const row = `<tr>
+          <td>${item.name}</td>
+          <td>Rp ${item.price.toLocaleString()}</td>
+          <td>Rp ${installmentValue.toLocaleString()} x ${item.installmentOption} bulan</td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+
+      document.getElementById('totalPrice').textContent = `Rp ${totalPrice.toLocaleString()}`;
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const totalPrice = items.reduce((sum, item) => sum + item.price, 0);
+      const remaining = totalPrice - totalSavings;
+      const totalSummary = totalPrice + totalSavings;
+
+      document.getElementById('totalSavings').textContent = `Rp ${totalSavings.toLocaleString()}`;
+      document.getElementById('remaining').textContent = `Rp ${remaining > 0 ? remaining.toLocaleString() : '0'}`;
+      document.getElementById('totalSummary').textContent = `Rp ${totalSummary.toLocaleString()}`;
+    }
+
+    // Initial load
+    updateTable();
+  </script>
+</body>
+</html>
